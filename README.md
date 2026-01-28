@@ -1,4 +1,3 @@
-# kyy.github.io
 <!DOCTYPE html>
 <html lang="id">
 <head>
