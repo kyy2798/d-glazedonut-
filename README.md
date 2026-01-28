@@ -1,4 +1,4 @@
-d'glazedonut 
+# kyy.github.io
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -322,3 +322,724 @@ d'glazedonut
                 <label>Alamat Lengkap</label>
                 <textarea id="setup-address" rows="2" placeholder="Nama Jalan, No Rumah..."></textarea>
             </div>
+            <div class="form-group">
+                <label>Patokan / Detail</label>
+                <input type="text" id="setup-detail" placeholder="Pagar hitam, sebelah warung...">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="saveSetupProfile()">Simpan & Lanjut</button>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT PROFILE -->
+    <div id="modal-edit-profile" class="modal-overlay">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal('modal-edit-profile')">&times;</span>
+            <h3>Edit Profil</h3>
+            <div class="form-group">
+                <label>Nomor WhatsApp</label>
+                <input type="tel" id="edit-phone">
+            </div>
+            <div class="form-group">
+                <label>Alamat Lengkap</label>
+                <textarea id="edit-address" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Patokan / Detail</label>
+                <input type="text" id="edit-detail">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="saveEditProfile()">Update Data</button>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD WALLET -->
+    <div id="modal-add-wallet" class="modal-overlay">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal('modal-add-wallet')">&times;</span>
+            <h3>Tambah Metode Bayar</h3>
+            <div class="form-group">
+                <label>Tipe E-Wallet / Bank</label>
+                <select id="wallet-type">
+                    <option value="gopay">GoPay</option>
+                    <option value="ovo">OVO</option>
+                    <option value="dana">DANA</option>
+                    <option value="bca">BCA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="wallet-label">Nomor Akun</label>
+                <input type="text" id="wallet-number" placeholder="08xx...">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="saveWallet()">Hubungkan</button>
+        </div>
+    </div>
+
+    <!-- MODAL: CUSTOM DONUT -->
+    <div id="modal-custom" class="modal-overlay">
+        <div class="modal" style="max-width:600px;">
+            <span class="close-btn" onclick="closeModal('modal-custom')">&times;</span>
+            <h3 style="text-align:center; margin-bottom:5px;">Buat Donat Custom</h3>
+            <p style="text-align:center; color:#666; font-size:0.9rem; margin-bottom:20px;">Pilih glaze dan topping favoritmu.</p>
+            
+            <div style="max-height:60vh; overflow-y:auto; padding-right:5px;">
+                <!-- Glaze Section -->
+                <div class="custom-section">
+                    <h4>1. Pilih Glaze (Wajib Satu)</h4>
+                    <div class="options-grid" id="glaze-options"></div>
+                </div>
+
+                <!-- Topping Section -->
+                <div class="custom-section" style="border:none;">
+                    <h4>2. Pilih Topping (Boleh Banyak)</h4>
+                    <div class="options-grid" id="topping-options"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+                <div>
+                    <small>Total Harga</small>
+                    <div style="font-size:1.5rem; font-weight:800; color:var(--accent);" id="custom-total-display">Rp 8.000</div>
+                </div>
+                <button class="btn btn-primary" onclick="addCustomToCart()">Masuk Keranjang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CART & CHECKOUT -->
+    <div id="modal-cart" class="modal-overlay">
+        <div class="modal">
+            <span class="close-btn" onclick="closeModal('modal-cart')">&times;</span>
+            <h3 style="margin-bottom:15px;">Keranjang Belanja</h3>
+            
+            <div id="cart-items-container" style="max-height:250px; overflow-y:auto; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:15px;">
+                <!-- Cart items JS -->
+            </div>
+
+            <!-- POINTS LOGIC -->
+            <div class="switch-container">
+                <div>
+                    <div style="font-weight:600;">Gunakan Poin?</div>
+                    <small id="points-hint-text">Poin Anda: 0 (100 Poin = Diskon Rp 10.000)</small>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="use-points-toggle" onchange="calcCheckout()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div style="text-align:right; margin-bottom:15px;">
+                <div style="font-size:1.4rem; font-weight:700; color:var(--primary);" id="checkout-total">Rp 0</div>
+                <small id="discount-label" style="color:var(--danger); display:none;">Hemat Rp 0</small>
+            </div>
+
+            <!-- PAYMENT AREA (Hidden initially) -->
+            <div id="payment-area" style="display:none; background:#f9f9f9; padding:15px; border-radius:8px;">
+                <div class="form-group">
+                    <label>Metode Pembayaran</label>
+                    <select id="payment-method" onchange="handlePaymentSelect()">
+                        <option value="">-- Pilih --</option>
+                        <option value="QRIS">QRIS (Scan Barcode)</option>
+                        <option value="WALLET">E-Wallet / Kartu Tersimpan</option>
+                        <option value="MANUAL">Transfer Bank Manual</option>
+                    </select>
+                </div>
+
+                <!-- QRIS UI -->
+                <div id="pay-qris" style="display:none;" class="qris-area">
+                    <p style="margin-bottom:10px; font-weight:600;">Scan QRIS di bawah ini:</p>
+                    <img id="qris-img" src="" alt="QRIS" style="width:180px; height:180px; border-radius:8px;">
+                    <p style="font-size:0.8rem; color:#666; margin-top:5px;">Berlaku untuk GoPay, OVO, Dana, Mobile Banking.</p>
+                </div>
+
+                <!-- WALLET LIST UI -->
+                <div id="pay-wallet" style="display:none;">
+                    <div id="checkout-wallet-list" style="display:grid; gap:8px; margin-bottom:10px;"></div>
+                </div>
+
+                <!-- MANUAL UI -->
+                <div id="pay-manual" style="display:none; font-size:0.9rem; text-align:center; background:white; padding:10px; border:1px dashed #ccc; border-radius:8px;">
+                    <p>Transfer ke <strong>BCA 123-456-7890</strong> a.n D'Glaze.</p>
+                </div>
+
+                <button id="btn-pay" class="btn btn-accent" style="width:100%; margin-top:15px; display:none;" onclick="processPayment()">Bayar Sekarang</button>
+            </div>
+
+            <button id="btn-checkout" class="btn btn-primary" style="width:100%;" onclick="goToPayment()">Lanjut Pembayaran</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & CONFIG ---
+        const BASE_PRICE = 8000;
+        
+        // UPDATED COMBOS: SEMUA GAMBAR .JPG
+        const COMBOS = [
+            { id: 'c1', name: "Choco Bomb", price: 13000, desc: "Donat cokelat lumer dengan topping cokelat chips.", img: "chocobomb.jpg" },
+            { id: 'c2', name: "Berry Bliss", price: 13500, desc: "Glaze stroberi dengan potongan buah segar.", img: "berrybliss.jpg" },
+            { id: 'c3', name: "Matcha Crunch", price: 14000, desc: "Glaze matcha jepang dengan almond.", img: "matchaalmond.jpg" },
+            { id: 'c4', name: "Tiramisu", price: 15000, desc: "Rasa kopi kuat dengan bubuk kakao.", img: "tiramisu.jpg" },
+
+            // MENU LAINNYA (Placeholder images)
+            { id: 'c5', name: "Cheese Meses", price: 11000, desc: "Glaze gula original dengan meses cokelat dan keju parut.", img: "cheesemeises.jpg" },
+            { id: 'c6', name: "Choco Cashew", price: 16000, desc: "Glaze cokelat tebal dengan kacang mete dan remahan oreo.", img: "chocolate.jpg" },
+            { id: 'c7', name: "White Berry", price: 15000, desc: "Glaze cokelat putih manis dengan oreo dan stroberi segar.", img: "whitechocolateberry.jpg" },
+            { id: 'c8', name: "Banana Split", price: 13000, desc: "Glaze stroberi dengan potongan pisang dan sprinkles ceria.", img: "strawberry.jpg" },
+            { id: 'c9', name: "Blueberry Crunch", price: 13500, desc: "Glaze blueberry asam manis dengan sereal dan white choco chips.", img: "blueberry.jpg" },
+            { id: 'c10', name: "Salted Caramel Pecan", price: 16000, desc: "Caramel asin gurih dengan kacang mete dan choco chips.", img: "caramelpecan.jpg" },
+            { id: 'c11', name: "Double Cheese", price: 15000, desc: "Double keju (glaze & parut) dengan topping oreo crunchy.", img: "doublecheese.jpg" }
+        ];
+
+        const GLAZES = [
+            { name: "Gula Original", price: 0 },
+            { name: "Chocolate Glaze", price: 2000 },
+            { name: "White Chocolate", price: 2000 },
+            { name: "Strawberry Glaze", price: 2000 },
+            { name: "Matcha Glaze", price: 3000 },
+            { name: "Blueberry Glaze", price: 2500 },
+            { name: "Caramel Sea Salt", price: 2500 },
+            { name: "Cheese Glaze", price: 3000 }
+        ];
+
+        // Updated Toppings with White Choco Chips
+        const TOPPINGS = [
+            { name: "Meses Cokelat", price: 1000 },
+            { name: "Sprinkles", price: 1000 },
+            { name: "Oreo Crumbs", price: 2000 },
+            { name: "Choco Chips", price: 1500 },
+            { name: "Keju Parut", price: 2000 },
+            { name: "Kacang Almond", price: 3000 },
+            { name: "Kacang Mete", price: 4000 },
+            { name: "Sereal", price: 1500 },
+            { name: "Potongan Strawberry", price: 3000 },
+            { name: "Potongan Pisang", price: 2000 },
+            { name: "White Choco Chips", price: 1500 }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let user = JSON.parse(localStorage.getItem('dg_user')) || null;
+        let cart = JSON.parse(localStorage.getItem('dg_cart')) || [];
+        let orders = JSON.parse(localStorage.getItem('dg_orders')) || [];
+
+        // --- INIT ---
+        window.onload = function() {
+            renderMenu();
+            checkAuth();
+            updateCartBadge();
+        };
+
+        // --- NAVIGATION ---
+        function navTo(pageId, el) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Show target
+            document.getElementById('page-' + pageId).classList.add('active');
+            
+            // Desktop Nav Active State
+            if(el) {
+                document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                el.classList.add('active');
+            } else if (pageId === 'menu') {
+                document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                document.querySelector('nav a:first-child').classList.add('active');
+            }
+
+            // Mobile Nav Active State
+            document.querySelectorAll('.mn-item').forEach(i => i.classList.remove('active'));
+            const mapMn = { 'menu':0, 'wallet':1, 'location':2, 'profile':3, 'orders':4 };
+            if(document.querySelectorAll('.mn-item')[mapMn[pageId]]) {
+                document.querySelectorAll('.mn-item')[mapMn[pageId]].classList.add('active');
+            }
+
+            if(pageId === 'wallet') renderWallets();
+            if(pageId === 'orders') renderOrders();
+            if(pageId === 'profile') renderProfile();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+
+        // --- AUTH SYSTEM ---
+        function checkAuth() {
+            const guestBtn = document.getElementById('btn-login-guest');
+            const userArea = document.getElementById('user-area');
+            if(user) {
+                guestBtn.style.display = 'none';
+                userArea.style.display = 'block';
+                document.getElementById('header-avatar').src = user.avatar;
+            } else {
+                guestBtn.style.display = 'block';
+                userArea.style.display = 'none';
+            }
+        }
+
+        function toggleUserMenu() {
+            const dd = document.getElementById('user-dropdown');
+            dd.style.display = (dd.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function showLoginModal() { openModal('modal-login'); }
+        
+        function doLogin(provider) {
+            // Simulating Login
+            user = {
+                name: "Pelanggan Baru",
+                email: `user@${provider}.com`,
+                phone: "",
+                address: "",
+                detail: "",
+                points: 0, // Starting points
+                wallets: [],
+                avatar: `https://ui-avatars.com/api/?name=Pelanggan+Baru&background=e67e22&color=fff`
+            };
+            saveUser();
+            closeModal('modal-login');
+            checkAuth();
+            showToast("Login Berhasil!");
+            
+            // Check if profile complete
+            if(!user.phone || !user.address) {
+                setTimeout(() => openModal('modal-setup'), 500);
+            }
+        }
+
+        function doLogout() {
+            if(confirm("Keluar akun?")) {
+                user = null;
+                cart = [];
+                saveUser();
+                saveCart();
+                checkAuth();
+                navTo('menu');
+                showToast("Berhasil Keluar");
+                document.getElementById('user-dropdown').style.display = 'none';
+            }
+        }
+
+        function saveUser() { localStorage.setItem('dg_user', JSON.stringify(user)); }
+
+        // --- PROFILE ---
+        function saveSetupProfile() {
+            user.phone = document.getElementById('setup-phone').value;
+            user.address = document.getElementById('setup-address').value;
+            user.detail = document.getElementById('setup-detail').value;
+            saveUser();
+            closeModal('modal-setup');
+            renderProfile();
+            showToast("Profil Tersimpan!");
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('edit-phone').value = user.phone || '';
+            document.getElementById('edit-address').value = user.address || '';
+            document.getElementById('edit-detail').value = user.detail || '';
+            openModal('modal-edit-profile');
+        }
+
+        function saveEditProfile() {
+            user.phone = document.getElementById('edit-phone').value;
+            user.address = document.getElementById('edit-address').value;
+            user.detail = document.getElementById('edit-detail').value;
+            saveUser();
+            closeModal('modal-edit-profile');
+            renderProfile();
+            showToast("Profil Diupdate!");
+        }
+
+        function renderProfile() {
+            document.getElementById('prof-img').src = user.avatar;
+            document.getElementById('prof-name').innerText = user.name;
+            document.getElementById('prof-email').innerText = user.email;
+            document.getElementById('prof-points').innerText = user.points.toLocaleString();
+            document.getElementById('disp-phone').innerText = user.phone || '-';
+            document.getElementById('disp-address').innerText = user.address || '-';
+            document.getElementById('disp-detail').innerText = user.detail || '-';
+        }
+
+        // --- WALLET ---
+        function openAddWalletModal() { openModal('modal-add-wallet'); }
+        
+        function saveWallet() {
+            const type = document.getElementById('wallet-type').value;
+            const num = document.getElementById('wallet-number').value;
+            if(!num) return alert("Nomor harus diisi");
+            
+            user.wallets.push({ type, num });
+            saveUser();
+            closeModal('modal-add-wallet');
+            renderWallets();
+            showToast("Metode Bayar Ditambahkan");
+        }
+
+        function renderWallets() {
+            const container = document.getElementById('wallet-list');
+            if(user.wallets.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">Belum ada metode bayar.</p>';
+                return;
+            }
+            container.innerHTML = user.wallets.map((w, i) => `
+                <div class="wallet-item">
+                    <div class="wallet-info">
+                        <div class="wallet-icon ${w.type}">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div>
+                            <strong style="text-transform:uppercase;">${w.type}</strong><br>
+                            <span style="color:#666;">${w.num}</span>
+                        </div>
+                    </div>
+                    <button style="border:none; background:none; color:var(--danger); cursor:pointer;" onclick="deleteWallet(${i})"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function deleteWallet(idx) {
+            if(confirm("Hapus kartu ini?")) {
+                user.wallets.splice(idx, 1);
+                saveUser();
+                renderWallets();
+            }
+        }
+
+        // --- MENU & CUSTOM ---
+        function renderMenu() {
+            const container = document.getElementById('product-grid');
+            let html = COMBOS.map(c => `
+                <div class="card">
+                    <img src="${c.img}" class="card-img" alt="${c.name}">
+                    <div class="card-body">
+                        <div class="card-title">${c.name}</div>
+                        <div class="card-desc">${c.desc}</div>
+                        <div class="card-price">Rp ${c.price.toLocaleString()}</div>
+                        <button class="btn btn-primary" onclick="addToCart('${c.name}', ${c.price})">Pesan</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Custom Card
+            html += `
+                <div class="card" style="border: 2px dashed var(--accent); background:#fffdf5;">
+                    <div class="card-img" style="height:200px; display:flex; align-items:center; justify-content:center; background:#fff8f0; flex-direction:column;">
+                        <i class="fas fa-magic fa-3x" style="color:var(--accent); margin-bottom:10px;"></i>
+                        <span style="font-weight:bold; color:var(--accent);">Custom Donut</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-title">Buat Sendiri</div>
+                        <div class="card-desc">Pilih glaze dan topping sesukamu.</div>
+                        <div class="card-price">Mulai <small>Rp 8.000</small></div>
+                        <button class="btn btn-accent" onclick="openCustomModal()">Buat Custom</button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // Custom Logic
+        let tempCustom = { glazeIdx: 0, toppingIdxs: [], total: 8000 };
+
+        function openCustomModal() {
+            if(!user) return showLoginModal();
+            
+            // Render Glazes
+            const glazeContainer = document.getElementById('glaze-options');
+            glazeContainer.innerHTML = GLAZES.map((g, i) => `
+                <div class="option-card ${i===0?'selected':''}" onclick="selectGlaze(${i}, this)">
+                    <div class="opt-name">${g.name}</div>
+                    <div class="opt-price">${g.price > 0 ? '+Rp '+g.price.toLocaleString() : 'Gratis'}</div>
+                </div>
+            `).join('');
+
+            // Render Toppings
+            const toppingContainer = document.getElementById('topping-options');
+            toppingContainer.innerHTML = TOPPINGS.map((t, i) => `
+                <div class="option-card" id="top-opt-${i}" onclick="toggleTopping(${i})">
+                    <div class="opt-name">${t.name}</div>
+                    <div class="opt-price">+Rp ${t.price.toLocaleString()}</div>
+                </div>
+            `).join('');
+
+            // Reset State
+            tempCustom = { glazeIdx: 0, toppingIdxs: [], total: 8000 };
+            updateCustomTotal();
+            openModal('modal-custom');
+        }
+
+        function selectGlaze(idx, el) {
+            document.querySelectorAll('#glaze-options .option-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            tempCustom.glazeIdx = idx;
+            updateCustomTotal();
+        }
+
+        function toggleTopping(idx) {
+            const el = document.getElementById('top-opt-'+idx);
+            const pos = tempCustom.toppingIdxs.indexOf(idx);
+            if(pos > -1) {
+                tempCustom.toppingIdxs.splice(pos, 1);
+                el.classList.remove('selected');
+            } else {
+                tempCustom.toppingIdxs.push(idx);
+                el.classList.add('selected');
+            }
+            updateCustomTotal();
+        }
+
+        function updateCustomTotal() {
+            let total = BASE_PRICE;
+            total += GLAZES[tempCustom.glazeIdx].price;
+            tempCustom.toppingIdxs.forEach(i => {
+                total += TOPPINGS[i].price;
+            });
+            tempCustom.total = total;
+            document.getElementById('custom-total-display').innerText = 'Rp ' + total.toLocaleString();
+        }
+
+        function addCustomToCart() {
+            // Create name string
+            const gName = GLAZES[tempCustom.glazeIdx].name;
+            const tNames = tempCustom.toppingIdxs.map(i => TOPPINGS[i].name).join(', ');
+            const fullName = `Custom (${gName}${tNames ? ', '+tNames : ''})`;
+            
+            addToCart(fullName, tempCustom.total);
+            closeModal('modal-custom');
+        }
+
+        // --- CART LOGIC ---
+        function addToCart(name, price) {
+            const exist = cart.find(item => item.name === name);
+            if(exist) {
+                exist.qty++;
+            } else {
+                cart.push({ name, price, qty: 1 });
+            }
+            saveCart();
+            updateCartBadge();
+            showToast("Masuk Keranjang!");
+        }
+
+        function saveCart() { localStorage.setItem('dg_cart', JSON.stringify(cart)); }
+        function updateCartBadge() {
+            const count = cart.reduce((a, b) => a + b.qty, 0);
+            document.getElementById('cart-badge').innerText = count;
+        }
+
+        function openCart() {
+            if(!user) return showLoginModal();
+            renderCartItems();
+            // Reset payment view
+            document.getElementById('payment-area').style.display = 'none';
+            document.getElementById('btn-checkout').style.display = 'block';
+            // Recalculate totals
+            calcCheckout();
+            openModal('modal-cart');
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items-container');
+            if(cart.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Keranjang kosong.</p>';
+                return;
+            }
+            container.innerHTML = cart.map((item, i) => `
+                <div class="cart-item">
+                    <div style="flex:1;">
+                        <strong>${item.name}</strong><br>
+                        <small>Rp ${item.price.toLocaleString()}</small>
+                    </div>
+                    <div class="qty-box">
+                        <button class="qty-btn" onclick="updateQty(${i}, -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${i}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateQty(idx, change) {
+            cart[idx].qty += change;
+            if(cart[idx].qty <= 0) cart.splice(idx, 1);
+            saveCart();
+            renderCartItems();
+            updateCartBadge();
+            calcCheckout(); // Re-calc totals
+        }
+
+        // --- CHECKOUT & POINTS LOGIC ---
+        let finalBill = 0;
+        let pointsUsed = 0;
+
+        function calcCheckout() {
+            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const usePoints = document.getElementById('use-points-toggle').checked;
+            
+            // Update hint text
+            document.getElementById('points-hint-text').innerText = `Poin Anda: ${user.points} (100 Poin = Diskon Rp 10.000)`;
+
+            if(usePoints && user.points >= 100) {
+                // Calculate Redeemable Discount
+                // Logic: Every 100 points = 10,000 discount
+                const setsOf100 = Math.floor(user.points / 100);
+                let discount = setsOf100 * 10000;
+
+                if(discount > subtotal) {
+                    discount = subtotal; // Max discount is total price
+                }
+
+                pointsUsed = setsOf100 * 100; // Points consumed
+                finalBill = subtotal - discount;
+                
+                document.getElementById('discount-label').style.display = 'block';
+                document.getElementById('discount-label').innerText = `Hemat Rp ${discount.toLocaleString()} (${pointsUsed} Poin)`;
+            } else {
+                pointsUsed = 0;
+                finalBill = subtotal;
+                document.getElementById('discount-label').style.display = 'none';
+            }
+
+            document.getElementById('checkout-total').innerText = 'Rp ' + finalBill.toLocaleString();
+        }
+
+        function goToPayment() {
+            if(cart.length === 0) return showToast("Keranjang kosong!");
+            document.getElementById('btn-checkout').style.display = 'none';
+            document.getElementById('payment-area').style.display = 'block';
+            // Reset Payment UI
+            document.getElementById('payment-method').value = "";
+            document.getElementById('pay-qris').style.display = 'none';
+            document.getElementById('pay-wallet').style.display = 'none';
+            document.getElementById('pay-manual').style.display = 'none';
+            document.getElementById('btn-pay').style.display = 'none';
+        }
+
+        function handlePaymentSelect() {
+            const method = document.getElementById('payment-method').value;
+            document.getElementById('pay-qris').style.display = 'none';
+            document.getElementById('pay-wallet').style.display = 'none';
+            document.getElementById('pay-manual').style.display = 'none';
+            document.getElementById('btn-pay').style.display = 'none';
+
+            if(method === 'QRIS') {
+                // Generate Fake QR based on total
+                const dataStr = "DGLAZE-" + finalBill;
+                document.getElementById('qris-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${dataStr}`;
+                document.getElementById('pay-qris').style.display = 'block';
+                document.getElementById('btn-pay').style.display = 'block';
+            } else if(method === 'WALLET') {
+                if(user.wallets.length === 0) {
+                    alert("Belum ada dompet tersimpan. Silakan tambah di menu Dompet.");
+                    document.getElementById('payment-method').value = "";
+                    return;
+                }
+                const list = document.getElementById('checkout-wallet-list');
+                list.innerHTML = user.wallets.map((w, i) => `
+                    <button class="btn btn-outline" style="justify-content:flex-start;" onclick="selectWalletMethod(this)">
+                        <i class="fas fa-wallet ${w.type}" style="margin-right:10px;"></i> ${w.type.toUpperCase()} - ${w.num}
+                    </button>
+                `).join('');
+                document.getElementById('pay-wallet').style.display = 'block';
+                document.getElementById('btn-pay').style.display = 'block';
+            } else if(method === 'MANUAL') {
+                document.getElementById('pay-manual').style.display = 'block';
+                document.getElementById('btn-pay').style.display = 'block';
+            }
+        }
+
+        function selectWalletMethod(btn) {
+            document.querySelectorAll('#checkout-wallet-list button').forEach(b => {
+                b.classList.remove('btn-primary');
+                b.classList.add('btn-outline');
+            });
+            btn.classList.remove('btn-outline');
+            btn.classList.add('btn-primary');
+        }
+
+        function processPayment() {
+            const method = document.getElementById('payment-method').value;
+            if(!method) return alert("Pilih metode pembayaran.");
+
+            const btn = document.getElementById('btn-pay');
+            btn.innerText = "Memproses...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // 1. Deduct Points
+                user.points -= pointsUsed;
+                
+                // 2. Earn New Points (Rp 1 = 1 Point)
+                const pointsEarned = Math.floor(finalBill);
+                user.points += pointsEarned;
+                saveUser();
+
+                // 3. Save Order
+                const newOrder = {
+                    id: 'INV-' + Date.now().toString().slice(-4),
+                    date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+                    items: [...cart],
+                    total: finalBill,
+                    payMethod: method,
+                    pointsUsed: pointsUsed,
+                    pointsEarned: pointsEarned
+                };
+                orders.unshift(newOrder);
+                localStorage.setItem('dg_orders', JSON.stringify(orders));
+
+                // 4. Clear Cart
+                cart = [];
+                saveCart();
+                updateCartBadge();
+
+                // 5. UI Feedback
+                closeModal('modal-cart');
+                showToast("Pembayaran Berhasil!");
+                navTo('orders');
+                renderOrders();
+
+                // Reset Button
+                btn.innerText = "Bayar Sekarang";
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-list');
+            if(orders.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Belum ada riwayat pesanan.</p>';
+                return;
+            }
+            container.innerHTML = orders.map(o => `
+                <div class="card" style="padding:15px; margin-bottom:15px; border-left: 5px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:bold; color:var(--accent);">#${o.id}</span>
+                        <span style="font-size:0.85rem; color:#666;">${o.date}</span>
+                    </div>
+                    <div style="font-size:0.9rem; color:#444; margin-bottom:10px;">
+                        ${o.items.map(i => `${i.qty}x ${i.name}`).join('<br>')}
+                    </div>
+                    <div style="border-top:1px solid #eee; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            ${o.pointsUsed > 0 ? `<div style="font-size:0.75rem; color:var(--danger);">Pakai ${o.pointsUsed} Poin</div>` : ''}
+                            <div style="font-size:0.75rem; color:var(--gold);">+${o.pointsEarned} Poin Baru</div>
+                        </div>
+                        <div style="font-weight:bold; font-size:1.1rem;">Rp ${o.total.toLocaleString()}</div>
+                    </div>
+                    <div style="margin-top:5px; font-size:0.8rem; color:#666; text-align:right;">
+                        Metode: ${o.payMethod}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Click outside modal to close
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
